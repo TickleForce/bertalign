@@ -19,6 +19,8 @@ for file in os.listdir(src_dir):
 
     aligner = Bertalign(src, tgt, encoder)
     aligner.align_sents()
+    #aligner.print_sents()
+
     test_alignments.append(aligner.result)
 
     gold_file = os.path.join(gold_dir, file)

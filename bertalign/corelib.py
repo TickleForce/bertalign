@@ -96,8 +96,7 @@ def second_pass_align(src_vecs,
                     best_score = score
                     best_a = a
             
-            # Update cell(i, j) with the best score
-            # and rescord the trace history.
+            # Update cell(i, j) with the best score and record the trace history.
             j_offset = j - i_start
             cost[i][j_offset] = best_score
             pointers[i][j_offset] = best_a
@@ -400,3 +399,39 @@ def find_top_k_sents(src_vecs, tgt_vecs, k=3):
         index.add(tgt_vecs)
         D, I = index.search(src_vecs, k)
     return D, I
+
+def compute_alignment_quality(src_vecs, tgt_vecs, src_lens, tgt_lens, alignments, char_ratio):
+    """
+    Find the top_k similar vecs in tgt_vecs for each vec in src_vecs.
+    Args:
+        src_vecs: numpy array of shape (num_src_sents, embedding_size).
+        tgt_vecs: numpy array of shape (num_tgt_sents, embedding_size).
+        src_lens: numpy array of shape (max_align-1, num_src_sents).
+        tgt_lens: numpy array of shape (max_align-1, num_tgt_sents).
+        alignments: int. array of alignments
+        char_ratio: float. Source to target length ratio.
+    Returns:
+        quality: float. The alignment quality
+    """
+    src_len = src_vecs.shape[1]
+    tgt_len = tgt_vecs.shape[1]
+    scores = []
+    for bead in alignments:
+        src_overlap = len(bead[0])
+        tgt_overlap = len(bead[1])
+
+        if src_overlap == 0 or tgt_overlap == 0:
+            continue
+
+        src_idx = bead[0][-1] + 1
+        tgt_idx = bead[1][-1] + 1
+        score = calculate_similarity_score(src_vecs, tgt_vecs, src_idx, tgt_idx,
+                                            src_overlap, tgt_overlap, src_len, tgt_len, margin=True)
+        score = min(score + 0.2, 1) # A similarity score above 0.8 is considered as 1.
+        penalty = calculate_length_penalty(src_lens, tgt_lens, src_idx, tgt_idx,
+                                            src_overlap, tgt_overlap, char_ratio)
+        score = (score + score * penalty) / 2
+        scores.append(score)
+    
+    quality = sum(scores) / len(scores) 
+    return quality

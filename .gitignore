@@ -1,1 +1,3 @@
 venv
+__pycache__
+bertalign/__pycache__
