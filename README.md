@@ -10,7 +10,19 @@ Bertalign uses [sentence-transformers](https://github.com/UKPLab/sentence-transf
 
 ## Performance
 
+The gold alignment dataset is based on translations of the Didache, letter of Polycarp, a Greek reader, and works of Josephus.
+
 LaBSE on eval dataset:
+```
+ ---------------------------------
+|             |  Strict |    Lax  |
+| Precision   |   0.946 |   0.999 |
+| Recall      |   0.935 |   1.000 |
+| F1          |   0.941 |   1.000 |
+ ---------------------------------
+```
+
+Using a sentence transformer trained on parallel data: 
 ```
  ---------------------------------
 |             |  Strict |    Lax  |
