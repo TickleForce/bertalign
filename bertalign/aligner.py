@@ -1,6 +1,4 @@
 import numpy as np
-
-from bertalign import model
 from bertalign.corelib import *
 from bertalign.utils import *
 
@@ -8,13 +6,13 @@ class Bertalign:
     def __init__(self,
                  src,
                  tgt,
+                 model,
                  max_align=5,
                  top_k=3,
                  win=5,
                  skip=-0.1,
                  margin=True,
                  len_penalty=True,
-                 is_split=False,
                ):
         
         self.max_align = max_align
@@ -26,33 +24,20 @@ class Bertalign:
         
         src = clean_text(src)
         tgt = clean_text(tgt)
-        src_lang = detect_lang(src)
-        tgt_lang = detect_lang(tgt)
         
-        if is_split:
-            src_sents = src.splitlines()
-            tgt_sents = tgt.splitlines()
-        else:
-            src_sents = split_sents(src, src_lang)
-            tgt_sents = split_sents(tgt, tgt_lang)
+        src_sents = src.splitlines()
+        tgt_sents = tgt.splitlines()
  
         src_num = len(src_sents)
         tgt_num = len(tgt_sents)
-        
-        src_lang = LANG.ISO[src_lang]
-        tgt_lang = LANG.ISO[tgt_lang]
-        
-        print("Source language: {}, Number of sentences: {}".format(src_lang, src_num))
-        print("Target language: {}, Number of sentences: {}".format(tgt_lang, tgt_num))
 
-        print("Embedding source and target text using {} ...".format(model.model_name))
+        print("Embedding source text...")
         src_vecs, src_lens = model.transform(src_sents, max_align - 1)
+        print("Embedding target text...")
         tgt_vecs, tgt_lens = model.transform(tgt_sents, max_align - 1)
 
         char_ratio = np.sum(src_lens[0,]) / np.sum(tgt_lens[0,])
 
-        self.src_lang = src_lang
-        self.tgt_lang = tgt_lang
         self.src_sents = src_sents
         self.tgt_sents = tgt_sents
         self.src_num = src_num
@@ -80,14 +65,18 @@ class Bertalign:
                                             self.char_ratio, self.skip, margin=self.margin, len_penalty=self.len_penalty)
         second_alignment = second_back_track(self.src_num, self.tgt_num, second_pointers, second_path, second_alignment_types)
         
-        print("Finished! Successfully aligning {} {} sentences to {} {} sentences\n".format(self.src_num, self.src_lang, self.tgt_num, self.tgt_lang))
+        print("Finished! Successfully aligning {} source sentences to {} target sentences\n".format(self.src_num, self.tgt_num))
         self.result = second_alignment
     
     def print_sents(self):
+        for src_line, tgt_line in self.pairs():
+            print(src_line + "\n" + tgt_line + "\n")
+
+    def pairs(self):
         for bead in (self.result):
             src_line = self._get_line(bead[0], self.src_sents)
             tgt_line = self._get_line(bead[1], self.tgt_sents)
-            print(src_line + "\n" + tgt_line + "\n")
+            yield src_line, tgt_line
 
     @staticmethod
     def _get_line(bead, lines):
