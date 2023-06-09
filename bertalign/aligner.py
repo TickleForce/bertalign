@@ -80,16 +80,21 @@ class Bertalign:
         for src_line, tgt_line in self.pairs():
             print(src_line + "\n" + tgt_line + "\n")
 
-    def pairs(self, include_blank=True):
+    def pairs(self, include_blank=True, src_sents=None, tgt_sents=None):
+        if src_sents is None:
+            src_sents = self.src_sents
+        if tgt_sents is None:
+            tgt_sents = self.tgt_sents
+
         if include_blank == True:
             for bead in self.result:
-                src_line = self._get_line(bead[0], self.src_sents)
-                tgt_line = self._get_line(bead[1], self.tgt_sents)
+                src_line = self._get_line(bead[0], src_sents)
+                tgt_line = self._get_line(bead[1], tgt_sents)
                 yield src_line, tgt_line
         else:
             for bead in self.result:
-                src_line = self._get_line(bead[0], self.src_sents)
-                tgt_line = self._get_line(bead[1], self.tgt_sents)
+                src_line = self._get_line(bead[0], src_sents)
+                tgt_line = self._get_line(bead[1], tgt_sents)
                 if src_line != '' and tgt_line != '':
                     yield src_line, tgt_line
 
