@@ -84,7 +84,7 @@ class Bertalign:
             for bead in self.result:
                 src_line = self._get_line(bead[0], self.src_sents)
                 tgt_line = self._get_line(bead[1], self.tgt_sents)
-                if src_line != '' and tgt_line != ''
+                if src_line != '' and tgt_line != '':
                     yield src_line, tgt_line
 
     @staticmethod
