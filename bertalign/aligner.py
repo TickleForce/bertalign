@@ -6,7 +6,7 @@ class Bertalign:
     def __init__(self,
                  src,
                  tgt,
-                 model,
+                 encoder,
                  max_align=5,
                  top_k=3,
                  win=5,
@@ -14,27 +14,27 @@ class Bertalign:
                  margin=True,
                  len_penalty=True,
                ):
-        
+
         self.max_align = max_align
         self.top_k = top_k
         self.win = win
         self.skip = skip
         self.margin = margin
         self.len_penalty = len_penalty
-        
+
         src = clean_text(src)
         tgt = clean_text(tgt)
-        
+
         src_sents = src.splitlines()
         tgt_sents = tgt.splitlines()
- 
+
         src_num = len(src_sents)
         tgt_num = len(tgt_sents)
 
         print("Embedding source text...")
-        src_vecs, src_lens = model.transform(src_sents, max_align - 1)
+        src_vecs, src_lens = encoder.transform(src_sents, max_align - 1)
         print("Embedding target text...")
-        tgt_vecs, tgt_lens = model.transform(tgt_sents, max_align - 1)
+        tgt_vecs, tgt_lens = encoder.transform(tgt_sents, max_align - 1)
 
         char_ratio = np.sum(src_lens[0,]) / np.sum(tgt_lens[0,])
 
@@ -47,7 +47,7 @@ class Bertalign:
         self.char_ratio = char_ratio
         self.src_vecs = src_vecs
         self.tgt_vecs = tgt_vecs
-        
+
     def align_sents(self):
 
         print("Performing first-step alignment...")
@@ -56,7 +56,7 @@ class Bertalign:
         first_w, first_path = find_first_search_path(self.src_num, self.tgt_num)
         first_pointers = first_pass_align(self.src_num, self.tgt_num, first_w, first_path, first_alignment_types, D, I)
         first_alignment = first_back_track(self.src_num, self.tgt_num, first_pointers, first_path, first_alignment_types)
-        
+
         print("Performing second-step alignment...")
         second_alignment_types = get_alignment_types(self.max_align)
         second_w, second_path = find_second_search_path(first_alignment, self.win, self.src_num, self.tgt_num)
@@ -64,21 +64,28 @@ class Bertalign:
                                             second_w, second_path, second_alignment_types,
                                             self.char_ratio, self.skip, margin=self.margin, len_penalty=self.len_penalty)
         second_alignment = second_back_track(self.src_num, self.tgt_num, second_pointers, second_path, second_alignment_types)
-        self.quality = compute_alignment_quality(self.src_vecs, self.tgt_vecs, self.src_lens, self.tgt_lens, second_alignment, self.char_ratio)
-        
+        self.confidence = compute_alignment_confidence(self.src_vecs, self.tgt_vecs, self.src_lens, self.tgt_lens, second_alignment, self.char_ratio)
+
         print("Finished! Successfully aligned {} source sentences to {} target sentences\n".format(self.src_num, self.tgt_num))
-        print("Alignment confidence: {}".format(self.quality))
+        print("Alignment confidence: {}".format(self.confidence))
         self.result = second_alignment
-    
+
     def print_sents(self):
         for src_line, tgt_line in self.pairs():
             print(src_line + "\n" + tgt_line + "\n")
 
-    def pairs(self):
-        for bead in self.result:
-            src_line = self._get_line(bead[0], self.src_sents)
-            tgt_line = self._get_line(bead[1], self.tgt_sents)
-            yield src_line, tgt_line
+    def pairs(self, include_blank=True):
+        if include_blank == True:
+            for bead in self.result:
+                src_line = self._get_line(bead[0], self.src_sents)
+                tgt_line = self._get_line(bead[1], self.tgt_sents)
+                yield src_line, tgt_line
+        else:
+            for bead in self.result:
+                src_line = self._get_line(bead[0], self.src_sents)
+                tgt_line = self._get_line(bead[1], self.tgt_sents)
+                if src_line != '' and tgt_line != ''
+                    yield src_line, tgt_line
 
     @staticmethod
     def _get_line(bead, lines):

@@ -3,15 +3,16 @@ import numpy as np
 from bertalign.utils import yield_overlaps
 
 class Encoder:
-    def __init__(self, sentence_transformer):
+    def __init__(self, sentence_transformer, show_progress_bar=False):
         self.model = sentence_transformer
+        self.show_progress_bar = show_progress_bar
 
     def transform(self, sents, num_overlaps):
         overlaps = []
         for line in yield_overlaps(sents, num_overlaps):
             overlaps.append(line)
 
-        sent_vecs = self.model.encode(overlaps, show_progress_bar=True, normalize_embeddings=True)
+        sent_vecs = self.model.encode(overlaps, show_progress_bar=self.show_progress_bar, normalize_embeddings=True)
         embedding_dim = sent_vecs.size // (len(sents) * num_overlaps)
         sent_vecs.resize(num_overlaps, len(sents), embedding_dim)
 

@@ -17,7 +17,7 @@ def second_back_track(i, j, pointers, search_path, a_types):
 
         i = i-s
         j = j-t
-    
+
         if i == 0 and j == 0:
             return alignment[::-1]
 
@@ -54,7 +54,7 @@ def second_pass_align(src_vecs,
     tgt_len = tgt_vecs.shape[1]
     cost = np.zeros((src_len + 1, w), dtype=nb.float32)
     pointers = np.zeros((src_len + 1, w), dtype=nb.uint8)
-  
+
     for i in range(src_len + 1):
         i_start = search_path[i][0]
         i_end = search_path[i][1]
@@ -69,7 +69,7 @@ def second_pass_align(src_vecs,
                 prev_i = i - a_1
                 prev_j = j - a_2
 
-                if prev_i < 0 or prev_j < 0 :  # no previous cell in DP table 
+                if prev_i < 0 or prev_j < 0 :  # no previous cell in DP table
                     continue
                 prev_i_start = search_path[prev_i][0]
                 prev_i_end =  search_path[prev_i][1]
@@ -83,24 +83,24 @@ def second_pass_align(src_vecs,
                 else:
                     cur_score = calculate_similarity_score(src_vecs,
                                                            tgt_vecs,
-                                                           i, j, a_1, a_2, 
+                                                           i, j, a_1, a_2,
                                                            src_len, tgt_len,
                                                            margin=margin)
                     if len_penalty:
                         penalty = calculate_length_penalty(src_lens, tgt_lens, i, j,
                                                            a_1, a_2, char_ratio)
                         cur_score *= penalty
-        
+
                 score += cur_score
                 if score > best_score:
                     best_score = score
                     best_a = a
-            
+
             # Update cell(i, j) with the best score and record the trace history.
             j_offset = j - i_start
             cost[i][j_offset] = best_score
             pointers[i][j_offset] = best_a
-      
+
     return pointers
 
 @nb.jit(nopython=True, fastmath=True, cache=True)
@@ -113,7 +113,7 @@ def calculate_similarity_score(src_vecs,
                                src_len,
                                tgt_len,
                                margin=False):
-  
+
     """
     Calulate the semantics-based similarity score of bitext segment.
     """
@@ -121,18 +121,18 @@ def calculate_similarity_score(src_vecs,
     tgt_v = tgt_vecs[tgt_overlap - 1, tgt_idx - 1, :]
     similarity = nb_dot(src_v, tgt_v)
     if margin:
-        tgt_neighbor_ave_sim = calculate_neighbor_similarity(src_v, 
+        tgt_neighbor_ave_sim = calculate_neighbor_similarity(src_v,
                                                              tgt_overlap,
                                                              tgt_idx,
                                                              tgt_len,
                                                              tgt_vecs)
-    
+
         src_neighbor_ave_sim = calculate_neighbor_similarity(tgt_v,
                                                              src_overlap,
                                                              src_idx,
                                                              src_len,
                                                              src_vecs)
-    
+
         neighbor_ave_sim = (tgt_neighbor_ave_sim + src_neighbor_ave_sim) / 2
         similarity -= neighbor_ave_sim
 
@@ -142,23 +142,23 @@ def calculate_similarity_score(src_vecs,
 def calculate_neighbor_similarity(vec, overlap, sent_idx, sent_len, db):
     left_idx = sent_idx - overlap
     right_idx = sent_idx + 1
-    
+
     if right_idx <= sent_len:
         right_embed = db[0, right_idx - 1, :]
         neighbor_right_sim = nb_dot(vec, right_embed)
     else:
         neighbor_right_sim = 0
- 
+
     if left_idx > 0:
         left_embed = db[0, left_idx - 1, :]
         neighbor_left_sim = nb_dot(vec, left_embed)
     else:
         neighbor_left_sim = 0
-    
+
     neighbor_ave_sim = neighbor_left_sim + neighbor_right_sim
     if neighbor_right_sim and neighbor_left_sim:
         neighbor_ave_sim /= 2
-    
+
     return neighbor_ave_sim
 
 @nb.jit(nopython=True, fastmath=True, cache=True)
@@ -218,7 +218,7 @@ def find_second_search_path(align, w, src_len, tgt_len):
         if last_bead_tgt != tgt_len:
             align.pop()
             align.append((src_len, tgt_len))
-    
+
     """
     Find the search path for each row.
     """
@@ -261,7 +261,7 @@ def first_back_track(i, j, pointers, search_path, a_types):
 
         i = i-s
         j = j-t
-    
+
         if i == 0 and j == 0: # if reaching the origin
             return alignment[::-1]
 
@@ -290,7 +290,7 @@ def first_pass_align(src_len,
     # Initialize cost and backpointer matrix.
     cost = np.zeros((src_len + 1, 2 * w + 1), dtype=nb.float32)
     pointers = np.zeros((src_len + 1, 2 * w + 1), dtype=nb.uint8)
-  
+
     top_k = index.shape[1]
 
     for i in range(src_len + 1):
@@ -306,7 +306,7 @@ def first_pass_align(src_len,
                 a_2 = align_types[a][1]
                 prev_i = i - a_1
                 prev_j = j - a_2
-                if prev_i < 0 or prev_j < 0 :  # no previous cell 
+                if prev_i < 0 or prev_j < 0 :  # no previous cell
                     continue
                 prev_i_start = search_path[prev_i][0]
                 prev_i_end =  search_path[prev_i][1]
@@ -314,7 +314,7 @@ def first_pass_align(src_len,
                     continue
                 prev_j_offset = prev_j - prev_i_start
                 score = cost[prev_i][prev_j_offset]
-                
+
                 # Extract the score for 1-1 bead from faiss.
                 if a_1 > 0 and a_2 > 0:
                     for k in range(top_k):
@@ -323,7 +323,7 @@ def first_pass_align(src_len,
                 if score > best_score:
                     best_score = score
                     best_a = a
-            
+
             # Update cell(i, j) with the best score
             # and rescord the trace history.
             j_offset = j - i_start
@@ -373,7 +373,7 @@ def get_alignment_types(max_alignment_size):
     for x in range(1, max_alignment_size):
         for y in range(1, max_alignment_size):
             if x + y <= max_alignment_size:
-                alignment_types.append([x, y])    
+                alignment_types.append([x, y])
     return np.array(alignment_types)
 
 def find_top_k_sents(src_vecs, tgt_vecs, k=3):
@@ -389,10 +389,10 @@ def find_top_k_sents(src_vecs, tgt_vecs, k=3):
     """
     embedding_size = src_vecs.shape[1]
     if torch.cuda.is_available() and platform == 'linux': # GPU version
-        res = faiss.StandardGpuResources() 
+        res = faiss.StandardGpuResources()
         index = faiss.IndexFlatIP(embedding_size)
         gpu_index = faiss.index_cpu_to_gpu(res, 0, index)
-        gpu_index.add(tgt_vecs) 
+        gpu_index.add(tgt_vecs)
         D, I = gpu_index.search(src_vecs, k)
     else: # CPU version
         index = faiss.IndexFlatIP(embedding_size)
@@ -400,7 +400,7 @@ def find_top_k_sents(src_vecs, tgt_vecs, k=3):
         D, I = index.search(src_vecs, k)
     return D, I
 
-def compute_alignment_quality(src_vecs, tgt_vecs, src_lens, tgt_lens, alignments, char_ratio):
+def compute_alignment_confidence(src_vecs, tgt_vecs, src_lens, tgt_lens, alignments, char_ratio):
     """
     Find the top_k similar vecs in tgt_vecs for each vec in src_vecs.
     Args:
@@ -420,7 +420,11 @@ def compute_alignment_quality(src_vecs, tgt_vecs, src_lens, tgt_lens, alignments
         src_overlap = len(bead[0])
         tgt_overlap = len(bead[1])
 
-        if src_overlap == 0 or tgt_overlap == 0:
+        if tgt_overlap == 0:
+            # This line of the source text does not map to any line of the target
+            scores.append(0)
+            continue
+        elif src_overlap == 0:
             continue
 
         src_idx = bead[0][-1] + 1
@@ -432,6 +436,6 @@ def compute_alignment_quality(src_vecs, tgt_vecs, src_lens, tgt_lens, alignments
                                             src_overlap, tgt_overlap, char_ratio)
         score = (score + score * penalty) / 2
         scores.append(score)
-    
-    quality = sum(scores) / len(scores) 
+
+    quality = sum(scores) / len(scores)
     return quality

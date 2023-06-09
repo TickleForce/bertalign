@@ -22,7 +22,7 @@ LaBSE on eval dataset:
  ---------------------------------
 ```
 
-Using a sentence transformer trained on parallel data: 
+Using a sentence transformer trained on Greek-English parallel data: 
 ```
  ---------------------------------
 |             |  Strict |    Lax  |
