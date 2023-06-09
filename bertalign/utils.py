@@ -26,7 +26,7 @@ def _layer(lines, num_overlaps, comb=' '):
     for ii in range(len(lines) - num_overlaps + 1):
         out.append(comb.join(lines[ii:ii + num_overlaps]))
     return out
-    
+
 def _preprocess_line(line):
     line = line.strip()
     if len(line) == 0:

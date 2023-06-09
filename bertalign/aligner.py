@@ -22,11 +22,17 @@ class Bertalign:
         self.margin = margin
         self.len_penalty = len_penalty
 
-        src = clean_text(src)
-        tgt = clean_text(tgt)
+        if isinstance(src, str):
+            src = clean_text(src)
+            src_sents = src.splitlines()
+        else:
+            src_sents = src
 
-        src_sents = src.splitlines()
-        tgt_sents = tgt.splitlines()
+        if isinstance(src, str):
+            tgt = clean_text(tgt)
+            tgt_sents = tgt.splitlines()
+        else:
+            tgt_sents = tgt
 
         src_num = len(src_sents)
         tgt_num = len(tgt_sents)
