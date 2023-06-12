@@ -1,6 +1,6 @@
 import os
 from bertalign import Bertalign, Encoder
-from bertalign.eval import * 
+from bertalign.eval import *
 from sentence_transformers import SentenceTransformer
 
 src_dir = 'eval/grc'
@@ -17,7 +17,7 @@ for file in os.listdir(src_dir):
     src = open(src_file, encoding='utf-8').read()
     tgt = open(tgt_file, encoding='utf-8').read()
 
-    aligner = Bertalign(src, tgt, encoder)
+    aligner = Bertalign(src, tgt, encoder, show_logs=True)
     aligner.align_sents()
     #aligner.print_sents()
 

@@ -13,6 +13,7 @@ class Bertalign:
                  skip=-0.1,
                  margin=True,
                  len_penalty=True,
+                 show_logs=False,
                ):
 
         self.max_align = max_align
@@ -21,6 +22,7 @@ class Bertalign:
         self.skip = skip
         self.margin = margin
         self.len_penalty = len_penalty
+        self.show_logs = show_logs
 
         if isinstance(src, str):
             src = clean_text(src)
@@ -37,9 +39,11 @@ class Bertalign:
         src_num = len(src_sents)
         tgt_num = len(tgt_sents)
 
-        print("Embedding source text...")
+        if show_logs:
+            print("Embedding source text...")
         src_vecs, src_lens = encoder.transform(src_sents, max_align - 1)
-        print("Embedding target text...")
+        if show_logs:
+            print("Embedding target text...")
         tgt_vecs, tgt_lens = encoder.transform(tgt_sents, max_align - 1)
 
         char_ratio = np.sum(src_lens[0,]) / np.sum(tgt_lens[0,])
@@ -56,14 +60,16 @@ class Bertalign:
 
     def align_sents(self):
 
-        print("Performing first-step alignment...")
+        if self.show_logs:
+            print("Performing first-step alignment...")
         D, I = find_top_k_sents(self.src_vecs[0,:], self.tgt_vecs[0,:], k=self.top_k)
         first_alignment_types = get_alignment_types(2) # 0-1, 1-0, 1-1
         first_w, first_path = find_first_search_path(self.src_num, self.tgt_num)
         first_pointers = first_pass_align(self.src_num, self.tgt_num, first_w, first_path, first_alignment_types, D, I)
         first_alignment = first_back_track(self.src_num, self.tgt_num, first_pointers, first_path, first_alignment_types)
 
-        print("Performing second-step alignment...")
+        if self.show_logs:
+            print("Performing second-step alignment...")
         second_alignment_types = get_alignment_types(self.max_align)
         second_w, second_path = find_second_search_path(first_alignment, self.win, self.src_num, self.tgt_num)
         second_pointers = second_pass_align(self.src_vecs, self.tgt_vecs, self.src_lens, self.tgt_lens,
@@ -72,8 +78,9 @@ class Bertalign:
         second_alignment = second_back_track(self.src_num, self.tgt_num, second_pointers, second_path, second_alignment_types)
         self.confidence = compute_alignment_confidence(self.src_vecs, self.tgt_vecs, self.src_lens, self.tgt_lens, second_alignment, self.char_ratio)
 
-        print("Finished! Successfully aligned {} source sentences to {} target sentences\n".format(self.src_num, self.tgt_num))
-        print("Alignment confidence: {}".format(self.confidence))
+        if self.show_logs:
+            print("Finished! Successfully aligned {} source sentences to {} target sentences\n".format(self.src_num, self.tgt_num))
+            print("Alignment confidence: {}".format(self.confidence))
         self.result = second_alignment
 
     def print_sents(self):
