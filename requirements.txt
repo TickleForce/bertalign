@@ -1,4 +1,4 @@
 numba==0.57.0
-faiss-cpu==1.7.4
-#faiss-gpu==1.7.4
+#faiss-cpu==1.7.4
+faiss-gpu==1.7.4
 sentence-transformers==2.2.2
