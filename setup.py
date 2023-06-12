@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='grc-bertalign',
-    version='0.0.5',
+    version='0.0.6',
     author='TickleForce',
     author_email='koderkk@gmail.com',
     description='Translation alignment with sentence transformers.',

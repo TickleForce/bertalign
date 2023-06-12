@@ -14,6 +14,7 @@ class Bertalign:
                  margin=True,
                  len_penalty=True,
                  show_logs=False,
+                 faisse_use_gpu=False,
                ):
 
         self.max_align = max_align
@@ -23,13 +24,14 @@ class Bertalign:
         self.margin = margin
         self.len_penalty = len_penalty
         self.show_logs = show_logs
+        self.faisse_use_gpu = faisse_use_gpu
 
         if isinstance(src, str):
             src_sents = clean_text(src).splitlines()
         else:
             src_sents = clean_lines(src)
 
-        if isinstance(src, str):
+        if isinstance(tgt, str):
             tgt_sents = clean_text(tgt).splitlines()
         else:
             tgt_sents = clean_lines(tgt)
@@ -60,7 +62,7 @@ class Bertalign:
 
         if self.show_logs:
             print("Performing first-step alignment...")
-        D, I = find_top_k_sents(self.src_vecs[0,:], self.tgt_vecs[0,:], k=self.top_k)
+        D, I = find_top_k_sents(self.src_vecs[0,:], self.tgt_vecs[0,:], k=self.top_k, use_gpu=self.faisse_use_gpu)
         first_alignment_types = get_alignment_types(2) # 0-1, 1-0, 1-1
         first_w, first_path = find_first_search_path(self.src_num, self.tgt_num)
         first_pointers = first_pass_align(self.src_num, self.tgt_num, first_w, first_path, first_alignment_types, D, I)
@@ -79,6 +81,7 @@ class Bertalign:
         if self.show_logs:
             print("Finished! Successfully aligned {} source sentences to {} target sentences\n".format(self.src_num, self.tgt_num))
             print("Alignment confidence: {}".format(self.confidence))
+
         self.result = second_alignment
 
     def print_sents(self):
