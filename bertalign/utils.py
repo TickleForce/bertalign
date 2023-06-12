@@ -11,6 +11,9 @@ def clean_text(text):
             clean_text.append(line)
     return "\n".join(clean_text)
 
+def clean_lines(lines):
+    return [re.sub('\s+', ' ', line.strip()) for line in lines]
+
 def yield_overlaps(lines, num_overlaps):
     lines = [_preprocess_line(line) for line in lines]
     for overlap in range(1, num_overlaps + 1):

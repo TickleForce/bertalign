@@ -25,16 +25,14 @@ class Bertalign:
         self.show_logs = show_logs
 
         if isinstance(src, str):
-            src = clean_text(src)
-            src_sents = src.splitlines()
+            src_sents = clean_text(src).splitlines()
         else:
-            src_sents = src
+            src_sents = clean_lines(src)
 
         if isinstance(src, str):
-            tgt = clean_text(tgt)
-            tgt_sents = tgt.splitlines()
+            tgt_sents = clean_text(tgt).splitlines()
         else:
-            tgt_sents = tgt
+            tgt_sents = clean_lines(tgt)
 
         src_num = len(src_sents)
         tgt_num = len(tgt_sents)
